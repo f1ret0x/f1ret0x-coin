@@ -42,8 +42,8 @@ h2,h3{margin-top:0}label{display:block;color:var(--muted);font-size:.9rem;margin
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 // Replace these with Project URL and publishable/anon key from Supabase Settings -> API Keys.
-const SUPABASE_URL = 'PASTE_YOUR_SUPABASE_PROJECT_URL_HERE';
-const SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY_HERE';
+const SUPABASE_URL = 'https://ykaoktlyvyyyxriyxgcy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_CD8v9bAn3hzfF-GfamFO1A_EL7umDyb';
 const configured = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('PASTE_') && !SUPABASE_ANON_KEY.includes('PASTE_');
 const supabase = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 const $ = id => document.getElementById(id);
