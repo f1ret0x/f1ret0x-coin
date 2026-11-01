@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>f1ret0x — Cloud Coin Demo</title>
+<style>
+:root{--bg:#090d12;--panel:#111923;--line:#253344;--text:#eaf1f8;--muted:#91a2b5;--accent:#00ff9d;--danger:#ff5570}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#142334 0,#090d12 55%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;display:grid;place-items:center;padding:22px}
+main{width:min(100%,900px)}.brand{text-align:center;margin-bottom:22px}.brand h1{letter-spacing:.14em;color:var(--accent);margin:0;font-size:clamp(2rem,7vw,3rem)}.brand p{color:var(--muted);margin:4px 0}
+.card{background:rgba(17,25,35,.96);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,4vw,30px);box-shadow:0 20px 70px #0006;margin:12px 0}
+h2,h3{margin-top:0}label{display:block;color:var(--muted);font-size:.9rem;margin:12px 0 5px}input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:9px;background:#080e15;color:var(--text);font:inherit}button{border:0;border-radius:9px;padding:12px 15px;font:700 .95rem system-ui;cursor:pointer;background:var(--accent);color:#06120d}button.secondary{background:#202d3b;color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.55;cursor:wait}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.row button{flex:1}.hidden{display:none!important}.muted{color:var(--muted);font-size:.92rem}.message{margin-top:12px;min-height:1.5em;color:var(--accent);overflow-wrap:anywhere}.balance{font-size:clamp(2rem,8vw,3rem);font-weight:800;color:var(--accent);letter-spacing:.02em}.pill{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:3px 9px;color:var(--muted);font-size:.8rem}.warn{border-left:3px solid #f3b84b;padding:10px 12px;background:#f3b84b12;color:#e8d7b1;font-size:.9rem;border-radius:5px}.foot{text-align:center;color:var(--muted);font-size:.82rem;margin-top:20px}hr{border-color:var(--line);border-width:1px 0 0;margin:22px 0}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}th{color:var(--muted)}.table-wrap{overflow-x:auto}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+</style></head>
+<body><main>
+<header class="brand"><h1>f1ret0x</h1><p>Cloud accounts · redeem keys · leaderboard</p></header>
+<section id="auth-card" class="card">
+<div class="row" style="margin-top:0"><button id="login-mode" class="secondary" type="button">LOG IN</button><button id="register-mode" class="secondary" type="button">CREATE ACCOUNT</button></div>
+<form id="auth-form"><div id="username-wrap" class="hidden"><label for="username">Username</label><input id="username" autocomplete="username" minlength="3" maxlength="24" placeholder="Choose a username"></div>
+<label for="email">Email</label><input id="email" type="email" required autocomplete="email" placeholder="you@example.com">
+<label for="password">Password</label><input id="password" type="password" required minlength="8" autocomplete="current-password" placeholder="At least 8 characters">
+<div class="row"><button id="auth-submit" type="submit">LOG IN</button></div></form><p id="auth-message" class="message" role="status"></p>
+<p class="muted">Create an account once, then use the same email and password on any device. Accounts and balances live in your Supabase database.</p></section>
+
+<section id="dashboard" class="hidden">
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Your account</h2><span id="role-pill" class="pill">Player</span></div>
+<p class="muted">Signed in as <strong id="display-username"></strong></p><p class="muted" style="margin-bottom:0">Coin balance</p><div class="balance"><span id="balance">0.0000</span> <small style="font-size:1rem">F1</small></div>
+<div class="two"><div><h3>Mine via Link</h3><p class="muted">Submit distinct text to earn 1 F1 once per account. This demo does not visit or verify a URL.</p>
+<form id="mine-form"><label for="mine-input">Link or text</label><input id="mine-input" maxlength="500" required placeholder="https://example.com/something"><div class="row"><button id="mine-button" type="submit">MINE COIN</button></div></form><p id="mine-message" class="message" role="status"></p></div>
+<div><h3>Redeem a key</h3><p class="muted">Keys work across devices and can only be redeemed once globally.</p>
+<form id="redeem-form"><label for="redeem-input">Redeem key</label><input id="redeem-input" maxlength="100" required placeholder="Enter your key"><div class="row"><button id="redeem-button" type="submit">REDEEM KEY</button></div></form><p id="redeem-message" class="message" role="status"></p></div></div>
+<div class="row"><button id="refresh-button" class="secondary" type="button">REFRESH</button><button id="logout" class="secondary" type="button">LOG OUT</button></div></div>
+
+<section class="card"><h2>Leaderboard</h2><p class="muted">Top 100 accounts by coin balance.</p><div class="table-wrap"><table><thead><tr><th>#</th><th>Username</th><th>F1 coins</th></tr></thead><tbody id="leaderboard-body"><tr><td colspan="3">Loading…</td></tr></tbody></table></div><p id="leaderboard-message" class="message"></p></section>
+
+<section id="admin-panel" class="card hidden"><h2>Admin panel</h2><p class="muted">Admin permissions are verified by the database, not by a browser password.</p>
+<div class="two"><div><h3>Create redeem key</h3><form id="create-key-form"><label for="key-amount">Coins to award</label><input id="key-amount" type="number" min="0.0001" max="1000000" step="0.0001" required value="10"><div class="row"><button id="create-key-button" type="submit">GENERATE KEY</button></div></form><p id="create-key-message" class="message" role="status"></p><p class="muted">Copy and share the key securely. It is shown only once here.</p></div>
+<div><h3>Give coins</h3><form id="credit-form"><label for="credit-username">Account username</label><input id="credit-username" required placeholder="Exact username"><label for="credit-amount">Amount</label><input id="credit-amount" type="number" min="0.0001" max="1000000" step="0.0001" required value="10"><div class="row"><button id="credit-button" type="submit">ADD COINS</button></div></form><p id="credit-message" class="message" role="status"></p></div></div>
+<hr><h3>All accounts</h3><div class="table-wrap"><table><thead><tr><th>Username</th><th>Balance</th><th>Role</th><th>Account ID</th></tr></thead><tbody id="accounts-body"><tr><td colspan="4">Loading…</td></tr></tbody></table></div><p id="accounts-message" class="message"></p>
+</section>
+<div class="card warn">Demo token only—not real cryptocurrency or a wallet. Keep your Supabase service-role/secret key private. Never put it in this HTML file.</div>
+</section><footer class="foot">f1ret0x · Secure server-side coin actions</footer></main>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// Replace these with Project URL and publishable/anon key from Supabase Settings -> API Keys.
+const SUPABASE_URL = 'PASTE_YOUR_SUPABASE_PROJECT_URL_HERE';
+const SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY_HERE';
+const configured = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('PASTE_') && !SUPABASE_ANON_KEY.includes('PASTE_');
+const supabase = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const $ = id => document.getElementById(id);
+let authMode = 'login', currentUser = null, currentProfile = null;
+function message(id,text,error=false){$(id).textContent=text;$(id).style.color=error?'var(--danger)':'var(--accent)'}
+function setMode(mode){authMode=mode;const registering=mode==='register';$('username-wrap').classList.toggle('hidden',!registering);$('auth-submit').textContent=registering?'CREATE ACCOUNT':'LOG IN';$('password').autocomplete=registering?'new-password':'current-password';$('login-mode').classList.toggle('secondary',registering);$('register-mode').classList.toggle('secondary',!registering);message('auth-message',registering?'Choose a username, email, and password.':'Log in with your registered email and password.')}
+function showAuth(){$('auth-card').classList.remove('hidden');$('dashboard').classList.add('hidden')}
+function showDashboard(){$('auth-card').classList.add('hidden');$('dashboard').classList.remove('hidden')}
+async function loadProfile(){
+ const {data:{user},error:authError}=await supabase.auth.getUser();if(authError||!user){currentUser=null;currentProfile=null;showAuth();return}
+ currentUser=user;const {data,error}=await supabase.from('profiles').select('username,balance,is_admin').eq('id',user.id).single();
+ if(error){message('auth-message','Signed in, but profile could not load: '+error.message,true);showAuth();return}
+ currentProfile=data;$('display-username').textContent=data.username;$('balance').textContent=Number(data.balance).toFixed(4);$('role-pill').textContent=data.is_admin?'Admin':'Player';$('admin-panel').classList.toggle('hidden',!data.is_admin);showDashboard();
+ await Promise.all([loadLeaderboard(),data.is_admin?loadAccounts():Promise.resolve()]);
+}
+async function loadLeaderboard(){
+ const body=$('leaderboard-body');body.innerHTML='<tr><td colspan="3">Loading…</td></tr>';
+ const {data,error}=await supabase.rpc('get_leaderboard');if(error){body.innerHTML='';message('leaderboard-message',error.message,true);return}
+ body.innerHTML='';data.forEach((row,i)=>{const tr=document.createElement('tr');[String(i+1),row.username,Number(row.balance).toFixed(4)].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});body.appendChild(tr)});if(!data.length)body.innerHTML='<tr><td colspan="3">No accounts yet.</td></tr>';message('leaderboard-message','');
+}
+async function loadAccounts(){
+ const body=$('accounts-body');body.innerHTML='<tr><td colspan="4">Loading…</td></tr>';
+ const {data,error}=await supabase.rpc('admin_list_accounts');if(error){body.innerHTML='';message('accounts-message',error.message,true);return}
+ body.innerHTML='';data.forEach(a=>{const tr=document.createElement('tr');[a.username,Number(a.balance).toFixed(4),a.is_admin?'Admin':'Player',a.id].forEach(v=>{const td=document.createElement('td');td.textContent=String(v);tr.appendChild(td)});body.appendChild(tr)});if(!data.length)body.innerHTML='<tr><td colspan="4">No accounts yet.</td></tr>';message('accounts-message','');
+}
+$('login-mode').addEventListener('click',()=>setMode('login'));$('register-mode').addEventListener('click',()=>setMode('register'));
+$('auth-form').addEventListener('submit',async e=>{e.preventDefault();if(!configured){message('auth-message','Setup needed: add your Supabase Project URL and publishable/anon key to this HTML file.',true);return}
+ const email=$('email').value.trim().toLowerCase(),password=$('password').value;$('auth-submit').disabled=true;
+ try{if(authMode==='register'){const username=$('username').value.trim();if(!/^[a-zA-Z0-9_]{3,24}$/.test(username)){message('auth-message','Username must be 3–24 letters, numbers, or underscores.',true);return}
+ const {data,error}=await supabase.auth.signUp({email,password,options:{data:{username}}});if(error)throw error;if(!data.session)message('auth-message','Account created. Confirm your email, then log in.');else{message('auth-message','Account created.');await loadProfile()}
+ }else{const {error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;await loadProfile()}}
+ catch(err){message('auth-message',err.message||'Authentication failed.',true)}finally{$('auth-submit').disabled=false}
+});
+$('mine-form').addEventListener('submit',async e=>{e.preventDefault();$('mine-button').disabled=true;try{const {data,error}=await supabase.rpc('mine_link',{p_link_text:$('mine-input').value.trim()});if(error)throw error;message('mine-message',data.message,!data.ok);$('mine-input').value='';await loadProfile()}catch(err){message('mine-message',err.message||'Mining failed.',true)}finally{$('mine-button').disabled=false}});
+$('redeem-form').addEventListener('submit',async e=>{e.preventDefault();$('redeem-button').disabled=true;try{const {data,error}=await supabase.rpc('redeem_key',{p_key:$('redeem-input').value.trim()});if(error)throw error;message('redeem-message',`${data.message} +${Number(data.amount).toFixed(4)} F1`);$('redeem-input').value='';await loadProfile()}catch(err){message('redeem-message',err.message||'Redeem failed.',true)}finally{$('redeem-button').disabled=false}});
+$('create-key-form').addEventListener('submit',async e=>{e.preventDefault();$('create-key-button').disabled=true;try{const amount=Number($('key-amount').value);const bytes=new Uint8Array(18);crypto.getRandomValues(bytes);const key='F1-'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();const {error}=await supabase.rpc('admin_create_redeem_key',{p_key:key,p_amount:amount});if(error)throw error;message('create-key-message','NEW KEY (copy it now): '+key);await loadAccounts()}catch(err){message('create-key-message',err.message||'Could not create key.',true)}finally{$('create-key-button').disabled=false}});
+$('credit-form').addEventListener('submit',async e=>{e.preventDefault();$('credit-button').disabled=true;try{const username=$('credit-username').value.trim();const account=(await supabase.rpc('admin_list_accounts')).data?.find(a=>a.username.toLowerCase()===username.toLowerCase());if(!account)throw new Error('No account found with that username.');const {data,error}=await supabase.rpc('admin_credit_coins',{p_user_id:account.id,p_amount:Number($('credit-amount').value)});if(error)throw error;message('credit-message',data.message);await loadProfile()}catch(err){message('credit-message',err.message||'Could not credit account.',true)}finally{$('credit-button').disabled=false}});
+$('refresh-button').addEventListener('click',loadProfile);$('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentUser=null;currentProfile=null;showAuth();message('auth-message','You are logged out.')});
+if(!configured)message('auth-message','Before using the app, complete the setup and paste the Supabase Project URL and publishable/anon key into this file.',true);
+else{supabase.auth.onAuthStateChange((_event,session)=>{if(session)setTimeout(()=>loadProfile(),0);else{currentUser=null;currentProfile=null;showAuth()}});loadProfile()}
+setMode('login');
+</script></body></html>
