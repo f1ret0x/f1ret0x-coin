@@ -225,19 +225,50 @@ el("mine-button").onclick=()=>{
   el("mine-input").value="";
   render();
 };
+
 el("create-key-button").onclick=()=>{
   if(!isAdmin())return;
+
   const amount=Number(el("key-amount").value);
+
   if(!Number.isFinite(amount)||amount<=0||amount>1000000000){
-    msg("key-message","Enter a valid coin amount.");return;
+    msg("key-message","Enter a valid coin amount.");
+    return;
   }
-  const code="F1-"+Array.from(crypto.getRandomValues(new Uint8Array(8)))
-    .map(x=>x.toString(16).padStart(2,"0")).join("").toUpperCase();
-  data.keys[code]={code,amount,used:false,createdBy:current.username};
+
+  if(current.coins < amount){
+    msg("key-message",
+      "Not enough coins! You have "+
+      current.coins.toFixed(4)+" F1.");
+    return;
+  }
+
+  const code="F1-"+Array.from(
+    crypto.getRandomValues(new Uint8Array(8))
+  ).map(x=>x.toString(16).padStart(2,"0"))
+   .join("").toUpperCase();
+
+  // Charge the admin for the code
+  current.coins-=amount;
+
+  // Create the redeem code with the same value
+  data.keys[code]={
+    code,
+    amount,
+    used:false,
+    createdBy:current.username
+  };
+
   save();
-  msg("key-message","NEW CODE — worth "+amount.toFixed(4)+" F1: "+code+" (copy it now)");
-  renderAdmin();
+
+  msg("key-message",
+    "CODE CREATED: "+code+
+    " | Value: "+amount.toFixed(4)+
+    " F1 | You paid: "+amount.toFixed(4)+" F1.");
+
+  render();
 };
+
 el("redeem-button").onclick=()=>{
   if(!current)return;
   const code=el("redeem-input").value.trim().toUpperCase();
