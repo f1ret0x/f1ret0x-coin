@@ -1,388 +1,271 @@
-<!DOCTYPE html>
 
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>f1ret0x Coin</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0b0d12;color:#f5f7fb;font-family:Arial,sans-serif}
-header{padding:22px;text-align:center;background:#151923;border-bottom:1px solid #303747}
-h1{margin:0;color:#6df5c1;letter-spacing:2px}
-main{max-width:760px;margin:25px auto;padding:16px}
-.card{background:#151923;border:1px solid #303747;border-radius:14px;padding:22px;margin-bottom:18px}
-input,button{width:100%;padding:12px;margin:7px 0;border-radius:8px;font-size:15px}
+header{text-align:center;background:#151923;padding:22px;border-bottom:1px solid #303747}
+h1{color:#6df5c1;margin:0;letter-spacing:3px}
+main{max-width:760px;margin:24px auto;padding:14px}
+.card{background:#151923;border:1px solid #303747;border-radius:14px;padding:20px;margin-bottom:16px}
+input,button{width:100%;padding:12px;margin:6px 0;border-radius:8px;font-size:15px}
 input{background:#0b0d12;color:white;border:1px solid #414a5d}
 button{background:#6df5c1;color:#07130f;border:0;font-weight:bold;cursor:pointer}
 button.secondary{background:#303747;color:white}
 .hidden{display:none!important}
 .muted{color:#aab3c5;font-size:13px;line-height:1.5}
-.balance{font-size:32px;color:#6df5c1;font-weight:bold}
+.balance{font-size:32px;font-weight:bold;color:#6df5c1}
 .message{overflow-wrap:anywhere;line-height:1.5}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+small{color:#aab3c5}
 </style>
 </head>
 <body>
 <header>
 <h1>f1ret0x</h1>
-<p>Digital Coins • Earn • Redeem • Compete</p>
+<p>Earn Coins · Redeem Codes · Climb the Leaderboard</p>
 </header>
-
 <main>
+
 <section id="auth" class="card">
 <h2 id="auth-title">Log In</h2>
-<label>Email</label>
-<input id="email" type="email" autocomplete="email" placeholder="you@example.com">
-<label>Username (registration only)</label>
-<input id="username" autocomplete="username" placeholder="Choose a username">
-<label>Password</label>
-<input id="password" type="password" autocomplete="current-password" placeholder="Password">
-<button id="submit-auth">LOG IN</button>
-<button id="toggle-auth" class="secondary">CREATE ACCOUNT</button>
-<button id="forgot" class="secondary">FORGOT PASSWORD?</button>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button id="auth-submit">LOG IN</button>
+<button id="auth-toggle" class="secondary">CREATE ACCOUNT</button>
 <p id="auth-message" class="message"></p>
-<p class="muted">Accounts and balances are stored in Supabase, not just in this browser.</p>
 </section>
 
-<section id="recovery" class="card hidden">
-<h2>Set a new password</h2>
-<input id="new-password" type="password" minlength="8" placeholder="New password">
-<button id="save-password">SAVE PASSWORD</button>
-<p id="recovery-message" class="message"></p>
-</section>
-
-<section id="app" class="hidden">
+<section id="game" class="hidden">
 <div class="card">
+<div class="row">
+<div>
 <h2>My Account</h2>
 <p id="welcome"></p>
+</div>
+<div>
+<p class="muted">YOUR BALANCE</p>
 <div class="balance"><span id="balance">0</span> F1</div>
-<button id="refresh" class="secondary">REFRESH BALANCE</button>
+</div>
+</div>
 <button id="logout" class="secondary">LOG OUT</button>
 </div>
 
 <div class="card">
-<h2>Mine via Text</h2>
-<p class="muted">Submit a unique text string to try to earn 1 F1 coin once per account. This does not visit or verify a website.</p>
-<input id="mine-text" placeholder="Enter text or a link">
+<h2>Mine via Link / Text</h2>
+<p class="muted">Submit a unique URL or text to earn 1 F1 once per account. This does not verify or visit the link.</p>
+<input id="mine-input" placeholder="Paste a link or enter text">
 <button id="mine-button">MINE +1 F1</button>
 <p id="mine-message" class="message"></p>
 </div>
 
 <div class="card">
-<h2>Redeem a Key</h2>
-<p class="muted">Each valid key can be redeemed only once globally. Its coin value is set by the admin.</p>
-<input id="redeem-key" placeholder="Enter redeem key">
-<button id="redeem-button">REDEEM KEY</button>
+<h2>Redeem a Code</h2>
+<input id="redeem-input" placeholder="Enter redeem code">
+<button id="redeem-button">REDEEM CODE</button>
 <p id="redeem-message" class="message"></p>
 </div>
 
 <div class="card">
 <h2>Leaderboard</h2>
-<div id="leaderboard">Loading leaderboard…</div>
+<div id="leaderboard"></div>
 </div>
 
-<div id="admin" class="card hidden">
+<div id="admin-panel" class="card hidden">
 <h2>Admin Panel</h2>
-<p class="muted">Admin permissions must be assigned in the database. Never rely on a browser-only admin password.</p>
+<p class="muted">Admin controls. Changes are saved in this browser only.</p>
+
 <h3>All Accounts</h3>
-<button id="load-accounts" class="secondary">LOAD ACCOUNTS</button>
 <div id="accounts"></div>
 
 <h3>Give Coins</h3>
-<input id="credit-user" placeholder="User ID">
+<input id="credit-username" placeholder="Username to credit">
 <input id="credit-amount" type="number" min="0.0001" step="0.0001" placeholder="Coin amount">
-<button id="credit-button">CREDIT ACCOUNT</button>
+<button id="credit-button">GIVE COINS</button>
 <p id="credit-message" class="message"></p>
 
-<h3>Create Redeem Key</h3>
-<input id="key-amount" type="number" min="0.0001" step="0.0001" placeholder="How many F1 coins?">
-<button id="create-key">GENERATE KEY</button>
-<p id="create-key-message" class="message"></p>
+<h3>Create Redeem Code</h3>
+<input id="key-amount" type="number" min="0.0001" step="0.0001" placeholder="How many coins?">
+<button id="create-key-button">GENERATE CODE</button>
+<p id="key-message" class="message"></p>
+<div id="keys-list"></div>
 </div>
 </section>
 </main>
 
 <script>
-/*
-  Paste your Supabase PROJECT URL and PUBLISHABLE key below.
-  Never put service_role keys, database passwords, or wallet private keys here.
-*/
-const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
+const ADMIN_USER = "f1ret0x";
+const ADMIN_PASS = "loveyoulove1!";
 
-const configured =
-  SUPABASE_URL.startsWith("https://") &&
-  SUPABASE_KEY !== "YOUR_SUPABASE_PUBLISHABLE_KEY";
+const STORE = "f1ret0x_local_v1";
+let registering = false;
+let current = null;
 
-const $ = id => document.getElementById(id);
-const say = (id, text) => $(id).textContent = text;
-
-let supabase = null;
-let isRegister = false;
-let currentUser = null;
-let currentProfile = null;
-
-if (configured) {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} else {
-  say("auth-message", "First add your Supabase URL and publishable key in the HTML.");
+function loadData(){
+  try{
+    const d = JSON.parse(localStorage.getItem(STORE));
+    if(d && d.accounts && d.keys) return d;
+  }catch(e){}
+  return {accounts:{},keys:{},mined:{}};
 }
+let data = loadData();
 
-function showAuth() {
-  $("auth").classList.remove("hidden");
-  $("app").classList.add("hidden");
-  $("recovery").classList.add("hidden");
+function save(){
+  localStorage.setItem(STORE,JSON.stringify(data));
 }
+function el(id){return document.getElementById(id)}
+function msg(id,text){el(id).textContent=text}
+function cleanName(s){return s.trim().toLowerCase()}
+function account(name){return data.accounts[cleanName(name)]}
+function isAdmin(){return current && current.admin===true}
 
-function showApp() {
-  $("auth").classList.add("hidden");
-  $("recovery").classList.add("hidden");
-  $("app").classList.remove("hidden");
+function showLogin(){
+  el("auth").classList.remove("hidden");
+  el("game").classList.add("hidden");
 }
-
-$("toggle-auth").onclick = () => {
-  isRegister = !isRegister;
-  $("auth-title").textContent = isRegister ? "Create Account" : "Log In";
-  $("submit-auth").textContent = isRegister ? "REGISTER" : "LOG IN";
-  $("toggle-auth").textContent = isRegister ? "BACK TO LOGIN" : "CREATE ACCOUNT";
-  $("username").classList.toggle("hidden", !isRegister);
-  $("auth-message").textContent = "";
-};
-
-$("submit-auth").onclick = async () => {
-  if (!configured) return;
-  const email = $("email").value.trim();
-  const password = $("password").value;
-  const username = $("username").value.trim();
-
-  try {
-    let result;
-
-    if (isRegister) {
-      if (!username) throw new Error("Choose a username.");
-      result = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { username } }
-      });
-    } else {
-      result = await supabase.auth.signInWithPassword({ email, password });
-    }
-
-    if (result.error) throw result.error;
-
-    if (isRegister && !result.data.session) {
-      say("auth-message", "Check your email to confirm your account, then log in.");
-      return;
-    }
-
-    currentUser = result.data.user;
-    await loadProfile();
-  } catch (e) {
-    say("auth-message", e.message || "Authentication failed.");
-  }
-};
-
-$("forgot").onclick = async () => {
-  if (!configured) return;
-  const email = $("email").value.trim();
-  if (!email) {
-    say("auth-message", "Enter your email first.");
-    return;
-  }
-
-  try {
-    const redirectTo = window.location.origin + window.location.pathname;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-    if (error) throw error;
-    say("auth-message", "If accepted, a reset email will arrive. Check spam. If email rate-limited, wait or configure SMTP in Supabase.");
-  } catch (e) {
-    say("auth-message", e.message);
-  }
-};
-
-$("save-password").onclick = async () => {
-  try {
-    const password = $("new-password").value;
-    if (password.length < 8) throw new Error("Use at least 8 characters.");
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) throw error;
-    say("recovery-message", "Password updated. You can now continue.");
-    await loadProfile();
-  } catch (e) {
-    say("recovery-message", e.message);
-  }
-};
-
-async function loadProfile() {
-  if (!configured) return;
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    showAuth();
-    return;
-  }
-  currentUser = user;
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, username, balance, is_admin")
-    .eq("id", user.id)
-    .single();
-
-  if (error) {
-    say("auth-message", "Could not load profile: " + error.message);
-    showAuth();
-    return;
-  }
-
-  currentProfile = data;
-  say("welcome", "Welcome, " + data.username);
-  say("balance", Number(data.balance || 0).toFixed(4));
-  $("admin").classList.toggle("hidden", data.is_admin !== true);
-  showApp();
-  await loadLeaderboard();
+function showGame(){
+  el("auth").classList.add("hidden");
+  el("game").classList.remove("hidden");
+  el("admin-panel").classList.toggle("hidden",!isAdmin());
+  render();
 }
-
-async function loadLeaderboard() {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("username, balance")
-    .order("balance", { ascending: false })
-    .limit(100);
-
-  if (error) {
-    say("leaderboard", "Could not load leaderboard.");
-    return;
-  }
-
-  $("leaderboard").replaceChildren();
-  (data || []).forEach((row, i) => {
-    const p = document.createElement("p");
-    p.textContent = `${i + 1}. ${row.username} — ${Number(row.balance).toFixed(4)} F1`;
-    $("leaderboard").appendChild(p);
+function render(){
+  if(!current)return;
+  el("welcome").textContent="Welcome, "+current.username;
+  el("balance").textContent=Number(current.coins).toFixed(4);
+  renderLeaderboard();
+  if(isAdmin())renderAdmin();
+}
+function renderLeaderboard(){
+  const list=Object.values(data.accounts).sort((a,b)=>b.coins-a.coins);
+  el("leaderboard").replaceChildren();
+  list.slice(0,100).forEach((a,i)=>{
+    const p=document.createElement("p");
+    p.textContent=(i+1)+". "+a.username+" — "+Number(a.coins).toFixed(4)+" F1";
+    el("leaderboard").appendChild(p);
   });
 }
-
-$("mine-button").onclick = async () => {
-  const text = $("mine-text").value.trim();
-  if (!text) {
-    say("mine-message", "Enter some text first.");
-    return;
-  }
-
-  try {
-    const { data, error } = await supabase.rpc("mine_link", { p_text: text });
-    if (error) throw error;
-    say("mine-message", data?.message || "Mining request processed.");
-    await loadProfile();
-  } catch (e) {
-    say("mine-message", "Mining failed: " + e.message);
-  }
-};
-
-$("redeem-button").onclick = async () => {
-  const key = $("redeem-key").value.trim();
-  if (!key) {
-    say("redeem-message", "Enter a key.");
-    return;
-  }
-
-  try {
-    const { data, error } = await supabase.rpc("redeem_key", { p_key: key });
-    if (error) throw error;
-    say("redeem-message", data?.message || "Key redeemed.");
-    await loadProfile();
-  } catch (e) {
-    say("redeem-message", "Redeem failed: " + e.message);
-  }
-};
-
-$("load-accounts").onclick = async () => {
-  try {
-    const { data, error } = await supabase.rpc("admin_list_accounts");
-    if (error) throw error;
-    $("accounts").replaceChildren();
-
-    (data || []).forEach(account => {
-      const p = document.createElement("p");
-      p.textContent = `${account.username} | ${account.id} | ${account.balance} F1`;
-      $("accounts").appendChild(p);
-    });
-  } catch (e) {
-    say("accounts", "Could not load accounts: " + e.message);
-  }
-};
-
-$("credit-button").onclick = async () => {
-  try {
-    const userId = $("credit-user").value.trim();
-    const amount = Number($("credit-amount").value);
-    const { data, error } = await supabase.rpc("admin_credit_account", {
-      p_user_id: userId,
-      p_amount: amount
-    });
-    if (error) throw error;
-    say("credit-message", data?.message || "Coins credited.");
-  } catch (e) {
-    say("credit-message", "Credit failed: " + e.message);
-  }
-};
-
-$("create-key").onclick = async () => {
-  try {
-    const amount = Number($("key-amount").value);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      throw new Error("Enter a coin amount greater than zero.");
-    }
-
-    const { data, error } = await supabase.rpc("admin_create_redeem_key", {
-      p_amount: amount
-    });
-    if (error) throw error;
-
-    const key = typeof data === "string" ? data : data?.key;
-    if (!key) throw new Error("The database did not return a key.");
-
-    say("create-key-message",
-      `NEW KEY — worth ${amount.toFixed(4)} F1, one-time use: ${key}`
-    );
-  } catch (e) {
-    say("create-key-message", "Key creation failed: " + e.message);
-  }
-};
-
-$("refresh").onclick = loadProfile;
-$("logout").onclick = async () => {
-  await supabase.auth.signOut();
-  currentUser = null;
-  currentProfile = null;
-  showAuth();
-};
-
-if (configured) {
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === "PASSWORD_RECOVERY") {
-      $("auth").classList.add("hidden");
-      $("app").classList.add("hidden");
-      $("recovery").classList.remove("hidden");
-    } else if (session) {
-      setTimeout(loadProfile, 0);
-    } else {
-      currentUser = null;
-      currentProfile = null;
-      showAuth();
-    }
+function renderAdmin(){
+  el("accounts").replaceChildren();
+  Object.values(data.accounts).forEach(a=>{
+    const p=document.createElement("p");
+    p.textContent=a.username+" — "+Number(a.coins).toFixed(4)+" F1"+(a.admin?" (ADMIN)":"");
+    el("accounts").appendChild(p);
   });
-
-  supabase.auth.getSession().then(({ data }) => {
-    if (data.session) loadProfile();
+  el("keys-list").replaceChildren();
+  Object.values(data.keys).forEach(k=>{
+    const p=document.createElement("p");
+    p.textContent=k.code+" — "+Number(k.amount).toFixed(4)+" F1 — "+(k.used?"REDEEMED":"AVAILABLE");
+    el("keys-list").appendChild(p);
   });
 }
+function setMode(){
+  el("auth-title").textContent=registering?"Create Account":"Log In";
+  el("auth-submit").textContent=registering?"REGISTER":"LOG IN";
+  el("auth-toggle").textContent=registering?"BACK TO LOGIN":"CREATE ACCOUNT";
+  msg("auth-message","");
+}
+el("auth-toggle").onclick=()=>{
+  registering=!registering;
+  setMode();
+};
+el("auth-submit").onclick=()=>{
+  const username=el("username").value.trim();
+  const password=el("password").value;
+  if(!username||!password){msg("auth-message","Enter username and password.");return}
+  if(registering){
+    if(username.length<3){msg("auth-message","Username must be at least 3 characters.");return}
+    if(password.length<4){msg("auth-message","Password must be at least 4 characters.");return}
+    if(account(username)){msg("auth-message","That username already exists.");return}
+    const a={username, password, coins:0, admin:false, mined:[]};
+    data.accounts[cleanName(username)]=a;
+    save();
+    current=a;
+    showGame();
+    return;
+  }
+  if(cleanName(username)===ADMIN_USER.toLowerCase() && password===ADMIN_PASS){
+    let a=account(ADMIN_USER);
+    if(!a){
+      a={username:ADMIN_USER,password:ADMIN_PASS,coins:0,admin:true,mined:[]};
+      data.accounts[cleanName(ADMIN_USER)]=a;
+    }
+    a.admin=true;
+    current=a;
+    save();
+    showGame();
+    return;
+  }
+  const a=account(username);
+  if(!a||a.password!==password){
+    msg("auth-message","Invalid username or password.");return;
+  }
+  current=a;
+  showGame();
+};
+el("logout").onclick=()=>{current=null;showLogin()};
+el("mine-button").onclick=()=>{
+  if(!current)return;
+  const text=el("mine-input").value.trim();
+  if(!text){msg("mine-message","Enter a link or text first.");return}
+  const hash=text.toLowerCase();
+  if(!Array.isArray(current.mined))current.mined=[];
+  if(current.mined.includes(hash)){
+    msg("mine-message","You've already mined this text on this account.");return;
+  }
+  current.mined.push(hash);
+  current.coins+=1;
+  save();
+  msg("mine-message","Success! You earned 1 F1 coin.");
+  el("mine-input").value="";
+  render();
+};
+el("create-key-button").onclick=()=>{
+  if(!isAdmin())return;
+  const amount=Number(el("key-amount").value);
+  if(!Number.isFinite(amount)||amount<=0||amount>1000000000){
+    msg("key-message","Enter a valid coin amount.");return;
+  }
+  const code="F1-"+Array.from(crypto.getRandomValues(new Uint8Array(8)))
+    .map(x=>x.toString(16).padStart(2,"0")).join("").toUpperCase();
+  data.keys[code]={code,amount,used:false,createdBy:current.username};
+  save();
+  msg("key-message","NEW CODE — worth "+amount.toFixed(4)+" F1: "+code+" (copy it now)");
+  renderAdmin();
+};
+el("redeem-button").onclick=()=>{
+  if(!current)return;
+  const code=el("redeem-input").value.trim().toUpperCase();
+  const key=data.keys[code];
+  if(!key){msg("redeem-message","Invalid redeem code.");return}
+  if(key.used){msg("redeem-message","This code has already been redeemed.");return}
+  key.used=true;
+  key.usedBy=current.username;
+  key.usedAt=new Date().toISOString();
+  current.coins+=key.amount;
+  save();
+  msg("redeem-message","Success! You redeemed "+key.amount.toFixed(4)+" F1.");
+  el("redeem-input").value="";
+  render();
+};
+el("credit-button").onclick=()=>{
+  if(!isAdmin())return;
+  const target=account(el("credit-username").value);
+  const amount=Number(el("credit-amount").value);
+  if(!target){msg("credit-message","Username not found.");return}
+  if(!Number.isFinite(amount)||amount<=0){msg("credit-message","Enter a valid amount.");return}
+  target.coins+=amount;
+  save();
+  msg("credit-message","Gave "+amount.toFixed(4)+" F1 to "+target.username+".");
+  render();
+};
 
-$("username").classList.add("hidden");
+setMode();
 </script>
-
 </body>
 </html>
